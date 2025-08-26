@@ -1,0 +1,21 @@
+﻿@model List<Movie>
+
+    <div class="container">
+        <div class="row">
+            @foreach (var item in Model)
+        {
+            <div class="col-4 my-2">
+                <div class="card" style="width: 18rem;">
+                    <img src="~/images/movies/@item.Images.ToList().FirstOrDefault().ImageUrl" class="card-img-top" alt="...">
+                    <div class="card-body">
+                        <h5 class="card-title">@item.Name</h5>
+                        <p class="card-text">@item.Category.Name</p>
+                        <p class="card-text">@item.Cinema.Name</p>
+                        <a href="/movie/details/@item.Id" class="btn btn-primary">Details</a>
+                    </div>
+                </div>
+
+            </div>
+        }
+        </div>
+    </div>

@@ -1,0 +1,81 @@
+﻿@using E_Ticket516.Models.ViewModels
+@model CreateVM
+<div class="container">
+
+    <div class="row">
+        <form action="create" enctype="multipart/form-data" method="post">
+            
+            <div class="mb-3">
+                <label for="name" class="form-label">name</label>
+                <input type="text" name="Name" value="@Model.Movie.Name" class="form-control" id="name" >
+               
+            </div>
+            <div class="mb-3">
+                <label for="describtion" class="form-label">describtion</label>
+                <input type="text" name="Description" value="@Model.Movie.Description" class="form-control" id="describtion">
+
+            </div>
+            <div class="mb-3">
+                <label for="price" class="form-label">price</label>
+                <input type="number" name="Price" value="@Model.Movie.Price" class="form-control" id="price">
+
+            </div>
+            <div class="mb-3">
+                <label for="startDate" class="form-label">startDate</label>
+                <input type="datetime-local" name="StartDate" value="@Model.Movie.StartDate.ToString("yyyy-MM-ddTHH:mm")" class="form-control" id="startDate">
+
+            </div>
+            <div class="mb-3">
+                <label for="img" class="form-label">imgs</label>
+                <input type="file" multiple name="imgs" class="form-control" id="img">
+
+            </div>
+            <div class="mb-3">
+                <label for="status" class="form-label">status</label>
+                <select id="status" name="Status" class="form-select">
+                    @foreach (MovieStatus item in Enum.GetValues(typeof(MovieStatus)))
+                        {
+                        <option selected="@(item == Model.Movie.Status)" value="@item">@item.ToString()</option>
+                        }
+                </select>
+
+            </div>
+
+            <div class="mb-3">
+                <label for="Category" class="form-label">Category</label>
+                <select name="CategoryId" id="Category" class="form-select">
+                    @foreach (var item in Model.Categories)
+                    {
+                        <option selected="@(item.Id==Model.Movie.CategoryId)" value="@item.Id">@item.Name</option>
+                    }
+                </select>
+
+            </div>
+            <div class="mb-3">
+                <label for="Cinema" class="form-label">Cinema</label>
+                <select name="CinemaId"" id="Cinema" class="form-select">
+                    @foreach (var item in Model.Cinemas)
+                    {
+                        <option selected="@(item.Id == Model.Movie.CinemaId)" value="@item.Id">@item.Name</option>
+                    }
+                </select>
+
+            </div>
+
+            <div class="mb-3">
+                <label for="Actor" class="form-label">Actors</label>
+                <select name="actors" multiple id="Actor" class="form-select">
+                    @foreach (var item in Model.Actors)
+                    {
+                        <option selected="@(Model.SelectedActors.Contains(item.Id)?"selected":null )" value="@item.Id">@(item.FirstName + " " + item.LastName)</option>
+                    }
+                </select>
+
+            </div>
+
+            <button type="submit" class="btn btn-primary">create</button>
+        
+        </form>
+    </div>
+
+</div>
