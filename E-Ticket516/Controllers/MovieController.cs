@@ -17,7 +17,7 @@ namespace E_Ticket516.Controllers
 
         public IActionResult Details(int id)
         {
-            var movie = _dbContext.Movies.Include(e => e.Cinema).Include(e => e.Category).Include(e => e.Images).FirstOrDefault();
+            var movie = _dbContext.Movies.Include(e => e.Cinema).Include(e => e.Category).Include(e => e.Images).FirstOrDefault(e => e.Id == id);
             var actorMovies = _dbContext.ActorsMovies.Include(e => e.Actor).Where(e => e.MovieId == id).ToList();
 
             var m = new MovieAndActorMoviesVM() { ActorMovies = actorMovies, Movie = movie };
@@ -30,12 +30,12 @@ namespace E_Ticket516.Controllers
             var Cinemas = _dbContext.Cinemas.ToList();
             var CAtegories = _dbContext.Categories.ToList();
             var Actors = _dbContext.Actors.ToList();
-            var m = new CreateVM() { Categories = CAtegories, Actors = Actors, Cinemas = Cinemas ,Movie = new Movie(), SelectedActors = new() };
+            var m = new CreateVM() { Categories = CAtegories, Actors = Actors, Cinemas = Cinemas, Movie = new Movie(), SelectedActors = new() };
             return View(m);
         }
 
         [HttpPost]
-        public IActionResult Create(Movie movie , List<int>actors , List<IFormFile>imgs)
+        public IActionResult Create(Movie movie, List<int> actors, List<IFormFile> imgs)
         {
             if (imgs.Any())
             {
@@ -68,8 +68,81 @@ namespace E_Ticket516.Controllers
             var Cinemas = _dbContext.Cinemas.ToList();
             var CAtegories = _dbContext.Categories.ToList();
             var Actors = _dbContext.Actors.ToList();
-            var m = new CreateVM() { Categories = CAtegories, Actors = Actors, Cinemas = Cinemas , Movie = movie , SelectedActors=actors};
+            var m = new CreateVM() { Categories = CAtegories, Actors = Actors, Cinemas = Cinemas, Movie = movie, SelectedActors = actors };
             return View(m);
+        }
+
+        public IActionResult Edit(int id)
+        {
+            var movie = _dbContext.Movies.Include(e => e.Cinema).Include(e => e.Category).FirstOrDefault(e => e.Id == id);
+            if (movie == null)
+            {
+                return NotFound();
+            }
+            var Cinemas = _dbContext.Cinemas.ToList();
+            var CAtegories = _dbContext.Categories.ToList();
+            var Actors = _dbContext.Actors.ToList();
+            var selectedActors = _dbContext.ActorsMovies.Where(e => e.MovieId == id).Select(e => e.ActorId).ToList();
+            var m = new CreateVM() { Categories = CAtegories, Actors = Actors, Cinemas = Cinemas, Movie = movie, SelectedActors = selectedActors };
+            return View(m);
+        }
+
+        [HttpPost]
+        public IActionResult Edit(Movie movie, List<int> actors, List<IFormFile> imgs)
+        {
+            if (imgs.Any())
+            {
+                List<string> newImgs = new List<string>();
+                var oldImgs = _dbContext.Images.Where(e => e.MovieId == movie.Id);
+                foreach (var item in oldImgs)
+                {
+                    var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot\\images\\movies", item.ImageUrl);
+                    if (System.IO.File.Exists(filePath))
+                    {
+                        System.IO.File.Delete(filePath);
+                    }
+                    _dbContext.Images.Remove(item);
+                }
+
+                foreach (var item in imgs)
+                {
+                    var fileName = Guid.NewGuid().ToString() + Path.GetExtension(item.FileName);
+                    var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot\\images\\movies", fileName);
+                    using (var stream = System.IO.File.Create(filePath))
+                    {
+                        item.CopyTo(stream);
+                    }
+                    newImgs.Add(fileName);
+                }
+
+                if (newImgs.Any())
+                {
+                    foreach (var item in newImgs)
+                    {
+                        _dbContext.Images.Add(new() { ImageUrl = item, MovieId = movie.Id });
+                    }
+                }
+            }
+
+            if (actors.Any())
+            {
+                var oldActors = _dbContext.ActorsMovies.Where(e => e.MovieId == movie.Id);
+                var actorsToAdd = actors.Except(oldActors.Select(e => e.ActorId));
+                var actorsToRemove = oldActors.Select(e => e.ActorId).Except(actors);
+
+                foreach (var item in actorsToAdd)
+                {
+                    _dbContext.ActorsMovies.Add(new() { ActorId = item, MovieId = movie.Id });
+                }
+
+                var Acts = _dbContext.ActorsMovies.Where(e => actorsToRemove.Contains(e.ActorId));
+                _dbContext.ActorsMovies.RemoveRange(Acts);
+                
+            }
+            _dbContext.Movies.Update(movie);
+            _dbContext.SaveChanges();
+            return RedirectToAction("Index");
+
         }
     }
 }
